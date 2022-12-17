@@ -28,7 +28,7 @@ class AuthController extends Controller
         if (!session()->isStarted()) session()->start();
         session()->put('logged', true);
         session()->put('user_id', $user->id);
-        return redirect()->route('home.product');
+        return redirect()->route('admin.dashboard');
     }
 
     public function logout()
