@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 class AuthController extends Controller
 {
+    public function index()
+    {
+        return view('admin.dashboard');
+    }
 
     public function login()
     {
@@ -15,15 +21,21 @@ class AuthController extends Controller
 
     public function do_login(Request $request)
     {
-        $username = $request->input('username');
+        $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+        $email = $request->input('email');
         $password = $request->input('password');
 
         // get one user with specified username
-        $user = User::where('username', strtolower($username))->first();
+        $user = User::where('email', strtolower($email))->first();
         // check user and user password
         // redirect user back to previous route when credentials not matched
-        if (is_null($user) || !Hash::check($password, $user->password)) return redirect()->back()->with('error', 'Username / password salah!');
+        if (is_null($user)) return back()->withErrors(['email'=>'Email tidak ditemukan!']);
+        if (!Hash::check($password, $user->password)) return back()->withErrors(['password'=>'Password salah!']);
 
+        //$request->session()->passwordConfirmed();
         // start session if session has not started yet
         if (!session()->isStarted()) session()->start();
         session()->put('logged', true);
@@ -42,28 +54,16 @@ class AuthController extends Controller
         return view("auth.register");
     }
 
-    public function do_register(Request $request) {
-        $request->validate([
-            'username'     => 'required',
+    public function do_register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'username' => 'required|max:255',
+            'email' => 'required',
         ]);
-        $payload = [
-            "username"          =>  $request->input("username"),
-            "email"             =>  $request->input("email"),
-            "password"          =>  $request->input("password"),
-            "role"              =>  $request->input("role"),
-        ];
-        $request->get("username");
-        $request->all();
-        $request->post("username");
-        $request->acceptsJson();
-        $request->allFiles();
-        $request->bearerToken();
-        $request->getMethod();
-        $request->session();
-        session();
-        $request->url();
-        $request->header("Authoriation");
-        User::query()->create($payload);
+        $validated =  $validator->validated();
+        $request -> validate(['password' => 'required']);
+        $validated['password'] = Hash::make($request->input("password"));
+        User::query()->create($validated);
         return redirect()->back();
     }
 }

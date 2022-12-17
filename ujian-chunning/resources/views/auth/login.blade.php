@@ -11,7 +11,18 @@
               <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">start your 14-day free trial</a>
             </p>
           </div>
+          @error('email')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+          @enderror
+          @error('password')
+          <span class="invalid-feedback" role="alert">
+              <strong>{{ $message }}</strong>
+          </span>
+    @enderror
           <form class="mt-8 space-y-6" action="{{ route('auth.do_login') }}" method="POST">
+            @csrf
             <input type="hidden" name="remember" value="true">
             <div class="-space-y-px rounded-md shadow-sm">
               <div>

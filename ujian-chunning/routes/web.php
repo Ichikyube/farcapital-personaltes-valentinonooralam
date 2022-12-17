@@ -26,21 +26,25 @@ Route::get('/', function () {
 
 // auth route
 Route::name('auth.')
+    ->controller(AuthController::class)
     ->group(function () {
-    Route::any("/login", [AuthController::class, "login"])->name("login")->middleware('noAuth');
-    Route::any("/logout", [AuthController::class, "logout"])->name("logout")->middleware('withAuth');
-    Route::any("/register", [AuthController::class, "register"])->name("register")->middleware('noAuth');
-    Route::any("/store", [AuthController::class, "do_register"])->name("store")->middleware('noAuth');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->middleware('auth');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update')->middleware('auth');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy')->middleware('auth');
+    Route::get("/login", "login")->name("login")->middleware('noAuth');
+    Route::post("/login", "do_login")->name("do_login")->middleware('noAuth');
+    Route::any("/logout", "logout")->name("logout")->middleware('withAuth');
+    Route::any("/register", "register")->name("register")->middleware('noAuth');
+    Route::any("/store", "do_register")->name("store")->middleware('noAuth');
 });
+
+Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->middleware('auth');
+Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update')->middleware('auth');
+Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy')->middleware('auth');
+
 Route::prefix('admin')
     ->name('admin.')
-    ->controller(SellerController::class)
+    ->controller(AuthController::class)
     ->middleware('withAuth')
     ->group(function () {
-    Route::get('/', 'index')->name('dashboard');
+        Route::get('/', 'index')->name('dashboard');
 });
 
 Route::prefix('participant')
@@ -54,12 +58,4 @@ Route::prefix('participant')
         Route::post('/store', 'store')->name('store');
         Route::put('/update/{participant}', 'update')->name('update');
         Route::delete('/destroy/{participant}', 'destroy')->name('destroy');
-});
-
-Route::prefix('form')
-    ->name()
-    ->controller()
-    ->middleware('withAuth')
-    ->group(function () {
-    Route::get('/users', [UserController::class, 'index']);
 });
