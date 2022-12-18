@@ -24,6 +24,9 @@ Route::get('/', function () {
     return view('welcome');
 })->middleware('noAuth');
 
+Route::get('/healthform', fn() => view('forms.healthcheck'));
+
+
 // auth route
 Route::name('auth.')
     ->controller(AuthController::class)
@@ -49,6 +52,19 @@ Route::prefix('admin')
 
 Route::prefix('participant')
     ->name('participants.')
+    ->controller((ParticipantsController::class))
+    ->middleware('withAuth')
+    ->group(function () {
+        Route::get('/', 'index')->name('list'); // student.list
+        Route::get('/show/{participant}', 'show')->name('show');
+        Route::get('/edit/{participant}', 'edit')->name('edit');
+        Route::post('/store', 'store')->name('store');
+        Route::put('/update/{participant}', 'update')->name('update');
+        Route::delete('/destroy/{participant}', 'destroy')->name('destroy');
+});
+
+Route::prefix('officer')
+    ->name('officers.')
     ->controller((ParticipantsController::class))
     ->middleware('withAuth')
     ->group(function () {

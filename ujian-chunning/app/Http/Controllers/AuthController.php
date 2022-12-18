@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Participant;
 use App\Models\User;
 class AuthController extends Controller
 {
@@ -27,7 +28,6 @@ class AuthController extends Controller
         ]);
         $email = $request->input('email');
         $password = $request->input('password');
-
         // get one user with specified username
         $user = User::where('email', strtolower($email))->first();
         // check user and user password
@@ -56,14 +56,23 @@ class AuthController extends Controller
 
     public function do_register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $uservalidator = Validator::make($request->all(), [
             'username' => 'required|max:255',
             'email' => 'required',
         ]);
-        $validated =  $validator->validated();
+        $uservalidated =  $uservalidator->validated();
         $request -> validate(['password' => 'required']);
-        $validated['password'] = Hash::make($request->input("password"));
-        User::query()->create($validated);
+        $uservalidated['password'] = Hash::make($request->input("password"));
+        User::query()->create($uservalidated);
+
+        $participantvalidator = Validator::make($request->all(), [
+            'fullname'  => 'required',
+            'address'   => 'required',
+            'gender'    => 'required',
+            'birthdate' => 'required'
+        ]);
+        $participantvalidated =  $participantvalidator->validated();
+        Participant::query()->create($participantvalidated);
         return redirect()->back();
     }
 }
