@@ -11,6 +11,13 @@ php artisan make:migration:schema create_users_table --schema="username:string, 
 php artisan make:migration:schema create_participants_table --schema="fullname:string, address:string, gender:string, birthdate:date"
 php artisan make:migration:schema create_requirementforms_table --schema="fullname:string, address:string, gender:string, birthdate:date"
 
+Admin bisa membuat mengedit dan mendelete user petugas
+petugas dapat melihat list seluruh pendonor
+Petugas bisa mengisi form pendonor
+Petugas tidak bisa mengubah form pendonor
+user bisa mendaftar sebagai pendonor dan mengisi requirement form, jika lolos, user akan terdaftar menjadi pendonor
+user dashboard show healthcheck result pribadi
+user dapat menghapus akun pribadi
 
 
 

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ParticipantsController;
+use Symfony\Component\HttpKernel\Profiler\Profile;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,20 +15,13 @@ use App\Http\Controllers\ParticipantsController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-/*
-login admin->dashboard
-participant->list
-participant->register
-participant->detail
-*/
+
 Route::get('/', function () {
     return view('welcome');
 })->middleware('noAuth');
 
-Route::get('/healthform', fn() => view('forms.healthcheck'));
 
-
-// auth route
+// login route
 Route::name('auth.')
     ->controller(AuthController::class)
     ->group(function () {
@@ -38,40 +32,53 @@ Route::name('auth.')
     Route::any("/store", "do_register")->name("store")->middleware('noAuth');
 });
 
-Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->middleware('auth');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update')->middleware('auth');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy')->middleware('auth');
+// Admin bisa membuat mengedit dan mendelete user petugas
+// petugas dapat melihat list seluruh pendonor
+// Petugas bisa mengisi form pendonor
+// Petugas tidak bisa mengubah form pendonor
+// user bisa mendaftar sebagai pendonor dan mengisi requirement form, jika lolos, user akan terdaftar menjadi pendonor
+// user dashboard show healthcheck result pribadi
+// user dapat menghapus akun pribadi
 
-Route::prefix('admin')
-    ->name('admin.')
-    ->controller(AuthController::class)
+Route::prefix('profile')
     ->middleware('withAuth')
     ->group(function () {
-        Route::get('/', 'index')->name('dashboard');
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::get('/dashboard',[AuthController::class, 'index'])->name('dashboard');
+        Route::prefix('participant')
+            ->name('participants.')
+            ->controller((ParticipantsController::class))
+            ->group(function () {
+                Route::get('/', 'list')->name('list')->middleware(['asOfficer','asAdmin']);
+                Route::get('/show/{participant}', 'show')->name('show')->middleware(['asOfficer','asAdmin']);
+                Route::get('/edit/{participant}', 'edit')->name('edit')->middleware(['asOfficer','asAdmin']);
+                Route::post('/store', 'store')->name('store');
+                Route::put('/update/{participant}', 'update')->name('update')->middleware(['asOfficer','asAdmin']);
+                Route::delete('/destroy/{participant}', 'destroy')->name('destroy')->middleware(['asOfficer','asAdmin']);
+        });
+        Route::prefix('officer')
+            ->name('officers.')
+            ->controller((OfficersController::class))
+            ->middleware('asAdmin')
+            ->group(function () {
+                Route::get('/', 'list')->name('list');
+                Route::get('/show/{participant}', 'show')->name('show');
+                Route::get('/edit/{participant}', 'edit')->name('edit');
+                Route::post('/store', 'store')->name('store');
+                Route::put('/update/{officers}', 'update')->name('update');
+                Route::delete('/destroy/{officers}', 'destroy')->name('destroy');
+        });
 });
 
-Route::prefix('participant')
-    ->name('participants.')
-    ->controller((ParticipantsController::class))
-    ->middleware('withAuth')
+Route::prefix('forms')
+    ->name('forms.')
+    ->controller(FormsController::class)
     ->group(function () {
-        Route::get('/', 'index')->name('list'); // student.list
-        Route::get('/show/{participant}', 'show')->name('show');
-        Route::get('/edit/{participant}', 'edit')->name('edit');
-        Route::post('/store', 'store')->name('store');
-        Route::put('/update/{participant}', 'update')->name('update');
-        Route::delete('/destroy/{participant}', 'destroy')->name('destroy');
+        Route::get('/healthcheck', fn() => view('forms.healthcheck'))->name('healthcheck');
+        Route::get('/requirement', fn() => view('forms.requirement'))->name('requirement');
+
 });
 
-Route::prefix('officer')
-    ->name('officers.')
-    ->controller((ParticipantsController::class))
-    ->middleware('withAuth')
-    ->group(function () {
-        Route::get('/', 'index')->name('list'); // student.list
-        Route::get('/show/{participant}', 'show')->name('show');
-        Route::get('/edit/{participant}', 'edit')->name('edit');
-        Route::post('/store', 'store')->name('store');
-        Route::put('/update/{participant}', 'update')->name('update');
-        Route::delete('/destroy/{participant}', 'destroy')->name('destroy');
-});
+
